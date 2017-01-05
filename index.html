@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Visualize Math</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <style>
+.isa_info, .isa_success, .isa_warning, .isa_error {
+margin: 10px 0px;
+padding:12px;
+}
+.isa_info {
+    color: #00529B;
+    background-color: #BDE5F8;
+}
+.isa_success {
+    color: #4F8A10;
+    background-color: #DFF2BF;
+}
+.isa_warning {
+    color: #9F6000;
+    background-color: #FEEFB3;
+}
+.isa_error {
+    color: #D8000C;
+    background-color: #FFBABA;
+}
+.isa_info i, .isa_success i, .isa_warning i, .isa_error i {
+    margin:10px 22px;
+    font-size:2em;
+    vertical-align:middle;
+}
+.slide {
+    width:260px; margin:15px;
+}
+.handle ui-slider-handle {
+    width: 3em;
+    height: 1.6em;
+    top: 50%;
+    margin-top: -.8em;
+    text-align: center;
+    line-height: 1.6em;
+}
+    </style>
+    <script>
+$( function() {
+  var toggle = function ( rule, success ) {
+    rule.toggleClass( "isa_success", success );
+    rule.toggleClass( "isa_error", !success );
+
+    var mark = rule.children( ":first" );
+    mark.toggleClass( "fa-check", success );
+    mark.toggleClass( "fa-times-circle", !success );
+  }
+  var visAdd = function ( canvasSelector, x, y, z ) {
+    var can = $(canvasSelector)[0];
+    var ctx = can.getContext( "2d" );
+    ctx.clearRect(0, 0, can.width, can.height);
+    if ( x + y === z ) {
+      ctx.fillStyle = "#008000";
+    } else {
+      ctx.fillStyle = "#800000";
+    }
+
+    for ( var i = 0; i < x; i++ ) {
+      ctx.fillRect( i*10, 0, 9, 9 );
+    }
+    ctx.fillText( "+",x*10-1,8 );
+
+    for ( var i = x; i < x+y; i++ ) {
+      ctx.fillRect( i*10+5, 0, 9, 9 );
+    }
+    ctx.fillText( "=",(x+y)*10+4, 8 );
+
+    for ( var i = x+y+1; i <= x+y+z; i++ ) {
+      ctx.fillRect( i * 10, 0, 9, 9 );
+    }
+  }
+
+  var visMult = function ( canvasSelector, x1, y1, x2, y2 ) {
+    var can = $(canvasSelector)[0];
+    var ctx = can.getContext( "2d" );
+    ctx.clearRect(0, 0, can.width, can.height);
+    if ( x1 * y1 === x2 * y2 ) {
+      ctx.fillStyle = "#008000";
+    } else {
+      ctx.fillStyle = "#800000";
+    }
+
+    for ( var i = 0; i < y1; i++ ) {
+      for ( var j = 0; j < x1; j++ ) {
+        ctx.fillRect( i*10, j*10, 9, 9 );
+      }
+    }
+    ctx.fillText( "=",y1*10-1,x1*5+3 );
+
+    for ( var i = 0; i < y2; i++ ) {
+      for ( var j = 0; j < x2; j++ ) {
+        ctx.fillRect( y1*10+i*10+5, j*10, 9, 9 );
+      }
+    }
+  }
+
+  var recalc = function() {
+    var vals = [];
+    var data = {};
+
+    $(".slide").each( function() {
+      var me = $(this);
+      var id = me.attr( "id" );
+      var val = me.slider( "option", "value" );
+      data[id] = val;
+      vals.push( val );
+    });
+
+    // check rule 0
+    vals.sort();
+    var rule0 = true;
+    for ( var i = 0; i < vals.length - 1; i++ ) {
+      if ( vals[i] === vals[i+1] ) {
+        rule0 = false;
+        break;
+      }
+    }
+    toggle( $("#rule0"), rule0 );
+
+    // check rule 1
+    var rule1 = data["a"] * data["h"] === data["b"] * data["f"];
+    toggle( $("#rule1"), rule1 );
+    visMult( "#canvas1", data["a"], data["h"], data["b"], data["f"] );
+
+    // check rule 2
+    var rule2 = data["h"] + data["d"] === data["b"];
+    toggle( $("#rule2"), rule2 );
+    visAdd( "#canvas2", data["h"], data["d"], data["b"] );
+
+    // check rule 3
+    var rule3 = data["d"] + data["b"] === data["f"];
+    toggle( $("#rule3"), rule3 );
+    visAdd( "#canvas3", data["d"], data["b"], data["f"] );
+
+    // check rule 4
+    var rule4 = data["b"] + data["f"] === data["c"];
+    toggle( $("#rule4"), rule4 );
+    visAdd( "#canvas4", data["b"], data["f"], data["c"] );
+
+    // check rule 5
+    var rule5 = data["b"] + data["e"] === data["i"];
+    toggle( $("#rule5"), rule5 );
+    visAdd( "#canvas5", data["b"], data["e"], data["i"] );
+
+  }
+  $( ".slide" ).each( function( index ) {
+    $(this).slider({
+      range: "max",
+      max: 9,
+      min: 1,
+      step: 1,
+      value: 1,
+      change: recalc,
+      create: function() {
+        $(this).children(":first").text( $( this ).slider( "value" ) );
+      },
+      slide: function( event, ui ) {
+        $(this).children(":first").text( ui.value );
+      }
+    });
+  });
+
+  recalc();
+});
+    </script>
+</head>
+<body>
+<h1>Visualize Math</h1>
+
+<div class="col-xs-6 col-md-9">
+<h2>Rules</h2>
+<div id="rule0"><i class="fa"></i> Each letter represents a different number from 1-9.</div>
+<div id="rule1"><i class="fa"></i> A * H = B * F</div>
+<canvas id="canvas1" width="200" height="90"></canvas>
+
+<div id="rule2"><i class="fa"></i> H + D = B</div>
+<canvas id="canvas2" width="300" height="12"></canvas>
+
+<div id="rule3"><i class="fa"></i> D + B = F</div>
+<canvas id="canvas3" width="300" height="12"></canvas>
+
+<div id="rule4"><i class="fa"></i> B + F = C</div>
+<canvas id="canvas4" width="300" height="12"></canvas>
+
+<div id="rule5"><i class="fa"></i> B + E = I</div>
+<canvas id="canvas5" width="300" height="12"></canvas>
+</div>
+
+<div class="col-xs-6 col-md-3">
+<h2>Values</h2>
+<table>
+    <tr>
+        <td>A</td>
+        <td><div class="slide" id="a"><div class="handle ui-slider-handle"></div></div></td>
+    </tr>
+    <tr>
+        <td>B</td>
+        <td><div class="slide" id="b"><div class="handle ui-slider-handle"></div></div></td>
+    </tr>
+    <tr>
+        <td>C</td>
+        <td><div class="slide" id="c"><div class="handle ui-slider-handle"></div></div></td>
+    </tr>
+    <tr>
+        <td>D</td>
+        <td><div class="slide" id="d"><div class="handle ui-slider-handle"></div></div></td>
+    </tr>
+    <tr>
+        <td>E</td>
+        <td><div class="slide" id="e"><div class="handle ui-slider-handle"></div></div></td>
+    </tr>
+    <tr>
+        <td>F</td>
+        <td><div class="slide" id="f"><div class="handle ui-slider-handle"></div></div></td>
+    </tr>
+    <tr>
+        <td>G</td>
+        <td><div class="slide" id="g"><div class="handle ui-slider-handle"></div></div></td>
+    </tr>
+    <tr>
+        <td>H</td>
+        <td><div class="slide" id="h"><div class="handle ui-slider-handle"></div></div></td>
+    </tr>
+    <tr>
+        <td>I</td>
+        <td><div class="slide" id="i"><div class="handle ui-slider-handle"></div></div></td>
+    </tr>
+</table>
+</div>
+</body>
+</html>
