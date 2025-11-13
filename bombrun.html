@@ -29,7 +29,7 @@
 
       function calculateAverageData() {
 	var data = calculateData();
-	for ( let i = 0; i < 999; i++ ) {
+	for ( let i = 0; i < 9999; i++ ) {
 	  var d0 = calculateData();
 	  for ( let j = 0; j < data.length; j++ ) {
 	    for ( let k = 0; k < data[j].length; k++ ) {
@@ -39,7 +39,7 @@
 	}
 	for ( let j = 0; j < data.length; j++ ) {
 	  for ( let k = 0; k < data[j].length; k++ ) {
-	    data[j][k] = data[j][k] / 1000.0;
+	    data[j][k] = data[j][k] / 10000.0;
 	  }
 	}
 	return data;
@@ -55,15 +55,16 @@
 	var b0 = Math.max( 0, bombRun.length - b2 - b1 );
 	document.getElementById("pick0").value = b0;
 
-	var totalHits = regHits.length + bombRun.length;
+	var floors = 60;
+	var totalHits = regHits.length + bombRun.length + floors;
 
-	var data = []
+	var data = [];
 
 	for ( let i = totalHits; i > 0; i-- ) {
 	  var vals = [
 		  totalHits - i,
-		  calculateEv( bombRun, regHits, b2, b1, b0 ),
-	  	  calculateEv( [], allHits, 0, 0, 0 )];
+		  calculateEv( bombRun, regHits, b2, b1, b0, floors ),
+	  	  calculateEv( [], allHits, 0, 0, 0, floors )];
 	  data.push( vals );
 	  var hit = getRandomHit(i);
 	  allHits.splice( hit, 1 );
@@ -75,9 +76,11 @@
 	  } else if ( hit < regHits.length + b0 + b1 ) {
 	    b1 -= 1;
 	    removeBoom( bombRun, 1 );
-	  } else {
+	  } else if ( hit < regHits.length + b0 + b1 + b2 ) {
 	    b2 -= 1;
 	    removeBoom( bombRun, 2 );
+	  } else {
+	    floors--;
 	  }
 	}
 
@@ -101,7 +104,7 @@
         return Math.floor(Math.random() * max);
       }
 
-      function calculateEv ( bombRun, regHits, b2, b1, b0 ) {
+      function calculateEv ( bombRun, regHits, b2, b1, b0, floors ) {
 	var tot = 0;
 	for ( let i = 0; i < regHits.length; i++ ) {
 	  tot += regHits[i];
@@ -109,7 +112,12 @@
 	tot += boomEv( bombRun, 2 ) * b2;
 	tot += boomEv( bombRun, 1 ) * b1;
 	tot += boomEv( bombRun, 0 ) * b0;
-	return tot / (regHits.length + bombRun.length)
+	tot += floorValue() * floors;
+	return tot / (regHits.length + bombRun.length + floors);
+      }
+
+      function floorValue () {
+	return parseInt( document.getElementById("miss").value );
       }
 
       function boomEv ( bombRun, pick ) {
@@ -156,7 +164,7 @@
         // Set chart options
         var avgOptions = {
           chart: {
-            title: 'Average 1000 Runs Hit EV',
+            title: 'Average 10,000 Runs EV',
             subtitle: 'in USD'
           },
           width: 900,
@@ -251,6 +259,10 @@
 			    <td><input id="h14" type="text" value="25"/></td>
 		    </tr>
 	    </table>
+    </div>
+    <div>
+	    <h1>60 Floors</h1>
+	    <input id="miss" type="text" value="5"/>
     </div>
     <div><input type="button" value="Calculate" onClick="drawChart();" /></div>
     <br/>
